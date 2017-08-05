@@ -35,12 +35,14 @@ def leds_off():
     print("leds_off()")
     badge.leds_send_data(bytes([0]*24), 24)
 
-def display_acknack():
+def display_acknack(data):
     print("display_acknack()")
+    print_message(data)
+
     ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
-    ugfx.flush()
+#    ugfx.flush()
     ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
-    ugfx.flush()
+#    ugfx.flush()
     ugfx.string(10, 90, "(START) discard", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
 
@@ -55,7 +57,7 @@ def clear_msg():
 def btn_a(pushed):
     global ack_state
     global mqttclient
-    global curr_id
+    global curr_data
     print("btn_a({}) ack_state: {}".format(pushed, ack_state))
     if not pushed:
         return
@@ -67,31 +69,31 @@ def btn_a(pushed):
         leds_off()
         clear_msg()
         print("SEND ACK!")
-        mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"ack\"}".format(curr_id))
-        curr_id = ""
+        mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"ack\"}".format(curr_data["id"]))
+        curr_data = {}
 
 def btn_b(pushed):
     print("btn_b({})".format(pushed))
     global ack_state
-    global curr_id
+    global curr_data
     if not pushed or not ack_state:
         return
 
     leds_off()
     clear_msg()
     print("SEND NACK!")
-    mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"nack\"}".format(curr_id))
-    curr_id = ""
+    mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"nack\"}".format(curr_data["id"]))
+    curr_data = {}
 
 def btn_start(pushed):
     print("btn_b({})".format(pushed))
     global ack_state
-    global curr_id
+    global curr_data
     if not pushed or not ack_state:
         return
 
     print("DISCARD!")
-    curr_id = ""
+    curr_data = {}
     leds_off()
     clear_msg()
 
@@ -113,10 +115,18 @@ def print_std_msg():
     ugfx.string(0, 115, "(SELECT) to quit, my id: {}".format(MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
 
+def print_message(data):
+    print("display: {}, {}: {}".format(0, 45, data.get("text", "")))
+    clear_screen()
+    print_std_msg()
+    print("display: {}, {}: {}".format(0, 45, data.get("text", "")))
+    ugfx.string(10, 40, "{} <{}> {}".format(easyrtc.string(), data["sender"], data["text"]), "Roboto_Regular12", ugfx.BLACK)
+    ugfx.flush()
+
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
-    global curr_id
+    global curr_data
 
     data = {}
     try:
@@ -135,15 +145,14 @@ def sub_cb(topic, msg):
         print("Missing field ID: {}".format(msg.decode('utf-8')))
         return
 
-    curr_id = data["id"]
+    curr_data = copy.copy(data)
 
     print("New message: {} > {}".format(topic.decode('utf-8'), data["text"]))
-    print_std_msg()
+
 
     new_message = True
 
-    print("display: {}, {}: {}".format(0, 45, data.get("text", "")))
-    ugfx.string(10, 40, "{} <{}> {}".format(easyrtc.string(), data["sender"], data["text"]), "Roboto_Regular12", ugfx.BLACK)
+    print_message(data)
     ugfx.string(0, 80, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
 
@@ -222,7 +231,7 @@ LED_DATA = bytes([
 ])
 
 ack_state = False
-curr_id = ""
+curr_data = {}
 
 """
         ugfx.input_attach(ugfx.JOY_UP,lambda pressed: self.btn_up(pressed))
