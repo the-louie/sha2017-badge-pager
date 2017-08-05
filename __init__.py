@@ -35,6 +35,8 @@ led_data = bytes([
     0, 0, 0, 0,
 ])
 
+message_queue = []
+
 def rotate(l, n):
     return l[n:] + l[:n]
 
@@ -43,25 +45,43 @@ def running_leds(i):
     badge.leds_send_data(led_data, 24)
     led_data = rotate(led_data, (i*4) % 24)
 
+def leds_off():
+    badge.leds_send_data([0]*24, 24)
+
+def messages_acc(pushed):
+    if pushed:
+        new_message = False
+        message_queue = []
+        leds_off()
+
+def redraw():
+    ugfx.clear(ugfx.WHITE)
+    ugfx.flush()
+    sleep(0.1)
+    ugfx.clear(ugfx.BLACK)
+    ugfx.flush()
+    sleep(0.1)
+    ugfx.clear(ugfx.WHITE)
+    ugfx.flush()
+
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
     text = msg.decode('utf-8')
 
-    if text.lower() == "on":
-        new_message = True
-    elif text.lower() == "off":
-        new_message = False
-
-    ugfx.clear(ugfx.WHITE)
-    sleep(0.1)
-    ugfx.clear(ugfx.BLACK)
-    sleep(0.1)
-    ugfx.clear(ugfx.WHITE)
-    sleep(0.1)
-
+    redraw()
     ugfx.string(0,0,"Badgepager v.{}".format(VERSION),"Roboto_BlackItalic24",ugfx.BLACK)
-    ugfx.string(0,15,text,"Roboto_Regular12",ugfx.BLACK)
+    ugfx.flush()
+
+    if text.lower() == "reset":
+        messages_acc()
+        return
+
+    new_message = True
+
+    for i in range(0, len(message_queue)-1):
+        ugfx.string(0,25 + (10*i), text, "Roboto_Regular12", ugfx.BLACK)
+
     ugfx.flush()
 
 def main(server="test.mosquitto.org"):
@@ -88,9 +108,11 @@ def main(server="test.mosquitto.org"):
     c.disconnect()
 
 def go_home(pushed):
-    if(pushed):
+    if pushed:
         import machine
         machine.deepsleep(1)
 
 ugfx.input_attach(ugfx.BTN_B, go_home)
+ugfx.input_attach(ugfx.BTN_A, messages_acc)
+
 main()
