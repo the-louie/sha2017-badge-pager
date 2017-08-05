@@ -4,6 +4,7 @@
 import gc
 import json
 from time import sleep as sleep
+import copy
 
 import ugfx
 import wifi
