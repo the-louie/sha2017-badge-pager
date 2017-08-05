@@ -61,6 +61,8 @@ def leds_off():
 
 def messages_acc(pushed):
     #print("messages_acc({})".format(pushed))
+    global new_message
+    global message_queue
     if pushed:
         new_message = False
         message_queue = []
@@ -80,8 +82,9 @@ def redraw():
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
+    global message_queue
     text = msg.decode('utf-8')
-    #print("New message: {} > {}".format(topic.decode('utf-8'), text))
+    print("New message: {} > {}".format(topic.decode('utf-8'), text))
     redraw()
     ugfx.string(0,0,"Badgepager v.{} ({})".format(VERSION, MAC),"Roboto_BlackItalic16",ugfx.BLACK)
     ugfx.flush()
@@ -102,8 +105,7 @@ def main(server="test.mosquitto.org"):
     global new_message
     #print("Running...")
 
-    clientname = 'SHA2017SWE ' + str(urandom.getrandbits(30))
-    mqttclient = MQTTClient(clientname, server)
+    mqttclient = MQTTClient(CLIENTNAME, server)
     mqttclient.set_callback(sub_cb)
     mqttclient.connect()
     mqttclient.subscribe(MQTT_PATH)
@@ -122,15 +124,15 @@ def main(server="test.mosquitto.org"):
             running_leds(i)
             i += 1
 
-        sleep(1)
+        sleep(0.3)
+
     mqttclient.disconnect()
 
 def go_home(pushed):
     #print("go_home({})".format(pushed))
     if pushed:
-        sys.exit(0)
-        # import machine
-        # machine.deepsleep(1)
+        import machine
+        machine.deepsleep(1)
 
 ugfx.input_attach(ugfx.BTN_B, go_home)
 ugfx.input_attach(ugfx.BTN_A, messages_acc)
