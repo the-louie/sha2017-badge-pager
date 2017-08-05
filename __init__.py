@@ -6,6 +6,8 @@ import network
 import easyrtc
 import sys
 
+print("START")
+
 VERSION = 0.2
 MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
 CLIENTNAME = "SHAPAGER.{}".format(MAC)
@@ -55,7 +57,7 @@ def running_leds(i):
 
 def leds_off():
     #print("leds_off()")
-    badge.leds_send_data([0]*24, 24)
+    badge.leds_send_data(bytes([0]*24), 24)
 
 def messages_acc(pushed):
     #print("messages_acc({})".format(pushed))
@@ -106,8 +108,10 @@ def main(server="test.mosquitto.org"):
     mqttclient.connect()
     mqttclient.subscribe(MQTT_PATH)
 
+    redraw()
+
     mqttclient.check_msg()
-    ugfx.string(10,10,"Badgepager online","Roboto_Regular12", 0)
+    ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
     ugfx.flush()
 
     i = 0
