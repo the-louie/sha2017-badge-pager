@@ -1,12 +1,17 @@
-# import shell
+import shell
+
+#######
 
 import network
 
-sta_if = network.WLAN(network.STA_IF);
+sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
 a = sta_if.scan()
 sta_if.connect("SHA2017-insecure")
 
+# while not sta_if.isconnected():
+# print("Not connected, waiting...")
+# sleep(0.2)
 
 #####
 
