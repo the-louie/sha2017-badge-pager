@@ -188,9 +188,7 @@ def main():
 
             print_std_msg()
 
-        print("start sleeping...")
-        esp.start_sleeping(5000)
-        print("end sleeping!")
+        sleep(5)
 
     mqttclient.disconnect()
 
