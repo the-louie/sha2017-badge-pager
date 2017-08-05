@@ -61,14 +61,19 @@ def leds_off():
     badge.leds_send_data(bytes([0]*24), 24)
 
 def display_acknack():
+    print "display_acknack()"
     ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
+    ugfx.flush()
     ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
+    ugfx.flush()
     ugfx.string(10, 90, "(START) discard", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
 
 def clear_msg():
     global new_message
     global message_queue
+    global ack_state
+    print("clear_msg()")
     new_message = False
     message_queue = []
     leds_off()
@@ -76,8 +81,8 @@ def clear_msg():
     redraw()
 
 def btn_a(pushed):
-    print("btn_a({})".format(pushed))
     global ack_state
+    print("btn_a({}) ack_state: {}".format(pushed, ack_state))
     if not pushed:
         return
 
