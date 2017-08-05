@@ -38,11 +38,11 @@ while not wifi.sta_if.isconnected():
     sleep(0.2)
 
 ugfx.clear(ugfx.WHITE)
-ugfx.string(10,10,"Connecting to MQTT {}...".format(MAC),"Roboto_Regular12", 0)
+ugfx.string(10, 10, "Connecting to MQTT {}...".format(MAC), "Roboto_Regular12", 0)
 ugfx.flush()
 
 new_message = False
-led_data = bytes([
+LED_DATA = bytes([
     8, 0, 0, 0,
     0, 8, 0, 0,
     0, 0, 0, 0,
@@ -58,9 +58,8 @@ def rotate(l, n):
 
 def running_leds(i):
     #print("running_leds({})".format(i))
-    global led_data
-    badge.leds_send_data(led_data, 24)
-    led_data = rotate(led_data, (i*4) % 24)
+    global LED_DATA
+    badge.leds_send_data(rotate(LED_DATA, (i*i*4) % 24), 24)
 
 def leds_off():
     #print("leds_off()")
@@ -144,13 +143,14 @@ def sub_cb(topic, msg):
     new_message = True
 
     print("display: {}, {}: {}".format(0, 45, text))
-    ugfx.string(0, 40, text, "Roboto_Regular12", ugfx.BLACK)
+    ugfx.string(10, 40, "{} {}".format(easyrtc.string(), text), "Roboto_Regular12", ugfx.BLACK)
+    ugfx.string(0, 60, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
 
 
 def main(server="test.mosquitto.org"):
     global new_message
-    #print("Running...")
+    print("Running...")
 
     mqttclient = MQTTClient(CLIENTNAME, server)
     mqttclient.set_callback(sub_cb)
@@ -158,20 +158,21 @@ def main(server="test.mosquitto.org"):
     mqttclient.subscribe(MQTT_PATH)
 
     redraw()
-    ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
+    ugfx.string(10, 10, "Badgepager ({})".format(MAC), "Roboto_Regular12", 0)
     ugfx.flush()
 
     i = 0
     while True:
         mqttclient.check_msg()
         print("post check_msg(): {}".format(new_message))
-        while new_message:
-            running_leds(i)
-            i += 1
-            sleep(0.1)
-        redraw()
-        ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
-        ugfx.flush()
+        if new_message:
+            while new_message:
+                running_leds(i)
+                i += 1
+                sleep(0.1)
+            redraw()
+            ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
+            ugfx.flush()
 
 
         sleep(5)
@@ -200,5 +201,4 @@ ugfx.input_attach(ugfx.BTN_A, btn_a)
 ugfx.input_attach(ugfx.BTN_B, btn_b)
 ugfx.input_attach(ugfx.BTN_START, btn_start)
 
-#print("test")
 main()
