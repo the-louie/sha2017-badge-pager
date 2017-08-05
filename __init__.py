@@ -61,7 +61,7 @@ def leds_off():
     badge.leds_send_data(bytes([0]*24), 24)
 
 def display_acknack():
-    print "display_acknack()"
+    print("display_acknack()")
     ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
     ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
