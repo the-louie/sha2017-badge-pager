@@ -1,21 +1,25 @@
-import shell
-import urequests as requests
-import io, os
+# import shell
+
 import network
 
 sta_if = network.WLAN(network.STA_IF);
 sta_if.active(True)
-sta_if.scan()
+a = sta_if.scan()
 sta_if.connect("SHA2017-insecure")
 
-r = requests.get('https://github.com/the-louie/sha2017-badge-pager/blob/master/__init__.py')
 
-if not os.path.isdir('lib/louie-test'):
-    os.mkdir('/lib/louie-test')
+#####
+
+import io
+import urequests as requests
+r = requests.get('https://raw.githubusercontent.com/the-louie/sha2017-badge-pager/master/__init__.py')
 
 f = io.open('/lib/louie-test/__init__.py', 'w')
 f.write(r.text)
 f.close()
+
+
+######
 
 import deepsleep
 deepsleep.reboot()
