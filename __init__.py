@@ -1,5 +1,7 @@
-from time import *
-import ugfx, gc, wifi, badge, deepsleep, urandom
+import ugfx
+import wifi
+import badge
+import deepsleep
 from umqtt.simple import MQTTClient
 import ubinascii
 import network
@@ -22,15 +24,15 @@ badge.leds_enable()
 # Make sure WiFi is connected
 wifi.init()
 
-ugfx.clear(ugfx.WHITE);
-ugfx.string(10,10,"Waiting for wifi...","Roboto_Regular12", 0)
+ugfx.clear(ugfx.WHITE)
+ugfx.string(10, 10, "Waiting for wifi...", "Roboto_Regular12", 0)
 ugfx.flush()
 
 # Wait for WiFi connection
 while not wifi.sta_if.isconnected():
     sleep(0.2)
 
-ugfx.clear(ugfx.WHITE);
+ugfx.clear(ugfx.WHITE)
 ugfx.string(10,10,"Connecting to MQTT {}...".format(MAC),"Roboto_Regular12", 0)
 ugfx.flush()
 
@@ -44,7 +46,6 @@ led_data = bytes([
     0, 0, 0, 0,
 ])
 
-message_queue = []
 ack_state = False
 
 def rotate(l, n):
@@ -71,11 +72,9 @@ def display_acknack():
 
 def clear_msg():
     global new_message
-    global message_queue
     global ack_state
     print("clear_msg()")
     new_message = False
-    message_queue = []
     leds_off()
     ack_state = False
     redraw()
@@ -127,7 +126,6 @@ def redraw():
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
-    global message_queue
     text = msg.decode('utf-8')
     print("New message: {} > {}".format(topic.decode('utf-8'), text))
     redraw()
@@ -139,12 +137,10 @@ def sub_cb(topic, msg):
         return
 
     new_message = True
-    message_queue.append("<{}> {}".format(easyrtc.string(), text))
 
-    for i in range(0, min(9, len(message_queue))):
-        print("display: {}, {}: {}".format(0, 35+(10*i), message_queue[i]))
-        ugfx.string(0, 35 + (10*i), message_queue[i], "Roboto_Regular12", ugfx.BLACK)
-        ugfx.flush()
+    print("display: {}, {}: {}".format(0, 45, text))
+    ugfx.string(0, 40, text, "Roboto_Regular12", ugfx.BLACK)
+    ugfx.flush()
 
 
 def main(server="test.mosquitto.org"):
@@ -157,8 +153,6 @@ def main(server="test.mosquitto.org"):
     mqttclient.subscribe(MQTT_PATH)
 
     redraw()
-
-    mqttclient.check_msg()
     ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
     ugfx.flush()
 
@@ -170,6 +164,10 @@ def main(server="test.mosquitto.org"):
             running_leds(i)
             i += 1
             sleep(0.1)
+        redraw()
+        ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
+        ugfx.flush()
+
 
         sleep(5)
 
