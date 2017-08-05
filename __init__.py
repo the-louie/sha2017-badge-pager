@@ -51,7 +51,7 @@ def clear_msg():
     new_message = False
     leds_off()
     ack_state = False
-    redraw()
+    clear_screen()
 
 def btn_a(pushed):
     global ack_state
@@ -87,19 +87,19 @@ def btn_start(pushed):
     print("DISCARD!")
     clear_msg()
 
-def redraw():
-    print("redraw()")
+def clear_screen():
+    print("clear_screen()")
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
-    sleep(0.2)
+    #sleep(0.2)
     ugfx.clear(ugfx.BLACK)
     ugfx.flush()
-    sleep(0.2)
+    #sleep(0.2)
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
 
 def print_std_msg():
-    redraw()
+    clear_screen()
     ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.string(0, 130, "(SELECT) to quit", "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
@@ -107,7 +107,7 @@ def print_std_msg():
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
-    text = ""
+    data = {}
     try:
         data = json.loads(msg.decode('utf-8'))
     except Exception:
@@ -119,7 +119,7 @@ def sub_cb(topic, msg):
 
     new_message = True
 
-    print("display: {}, {}: {}".format(0, 45, text))
+    print("display: {}, {}: {}".format(0, 45, data.get("text", "")))
     ugfx.string(10, 40, "{} <{}> {}".format(easyrtc.string(), data["sender"], data["text"]), "Roboto_Regular12", ugfx.BLACK)
     ugfx.string(0, 60, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
