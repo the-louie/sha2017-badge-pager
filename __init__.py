@@ -120,12 +120,13 @@ def main(server="test.mosquitto.org"):
     i = 0
     while True:
         mqttclient.check_msg()
-        print("checked: {}".format(new_message))
-        if new_message:
+        print("post check_msg(): {}".format(new_message))
+        while new_message:
             running_leds(i)
             i += 1
+            sleep(0.1)
 
-        sleep(0.3)
+        sleep(5)
 
     mqttclient.disconnect()
 
