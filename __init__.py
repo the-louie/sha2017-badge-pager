@@ -31,6 +31,12 @@ def running_leds(i):
     global LED_DATA
     badge.leds_send_data(rotate(LED_DATA, (i*i*4) % 24), 24)
 
+def buzzer(i):
+    if int(i/10) % 2 == 0:
+        badge.vibrator_activate(255)
+    else:
+        badge.vibrator_activate(0)
+
 def leds_off():
     print("leds_off()")
     badge.leds_send_data(bytes([0]*24), 24)
@@ -113,7 +119,7 @@ def clear_screen():
 
 def print_std_msg():
     clear_screen()
-    ugfx.string(0, 0, "Badgepager v.{}".format(VERSION, MAC), "Roboto_BlackItalic24", ugfx.BLACK)
+    ugfx.string(0, 0, "Badgepager v.{}".format(VERSION), "Roboto_BlackItalic24", ugfx.BLACK)
     ugfx.flush()
     ugfx.string(0, 115, "(SELECT) to quit, my id: {}".format(MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
@@ -175,8 +181,10 @@ def main():
         if new_message:
             while new_message:
                 running_leds(i)
+                buzzer(i)
                 i += 1
                 sleep(0.1)
+
             print_std_msg()
 
 
