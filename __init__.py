@@ -36,11 +36,11 @@ ugfx.flush()
 
 new_message = False
 led_data = bytes([
-    64, 0, 0, 128,
+    8, 0, 0, 0,
     0, 0, 0, 0,
-    0, 0, 64, 128,
+    0, 0, 8, 0,
     0, 0, 0, 0,
-    64, 64, 0, 128,
+    8, 8, 0, 0,
     0, 0, 0, 0,
 ])
 
@@ -96,8 +96,9 @@ def sub_cb(topic, msg):
     new_message = True
     message_queue.append("<{}> {}".format(easyrtc.string(), text))
 
-    for i in range(0, len(message_queue)-1):
-        ugfx.string(0,35 + (10*i), message_queue[i], "Roboto_Regular12", ugfx.BLACK)
+    for i in range(0, len(message_queue)):
+        print("display: {}, {}: {}".format(0, 35+(10*i), message_queue[i]))
+        ugfx.string(0, 35 + (10*i), message_queue[i], "Roboto_Regular12", ugfx.BLACK)
 
     ugfx.flush()
 
