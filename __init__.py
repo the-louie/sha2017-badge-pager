@@ -12,7 +12,7 @@ import ubinascii
 import network
 import easyrtc
 
-print("START")
+# print("START")
 
 VERSION = 0.2
 MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
@@ -24,16 +24,16 @@ def rotate(arr, length):
     return arr[length:] + arr[:length]
 
 def running_leds(i):
-    #print("running_leds({})".format(i))
+    # print("running_leds({})".format(i))
     global LED_DATA
     badge.leds_send_data(rotate(LED_DATA, (i*i*4) % 24), 24)
 
 def leds_off():
-    #print("leds_off()")
+    # print("leds_off()")
     badge.leds_send_data(bytes([0]*24), 24)
 
 def display_acknack():
-    print("display_acknack()")
+    # print("display_acknack()")
     ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
     ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
@@ -44,7 +44,7 @@ def display_acknack():
 def clear_msg():
     global new_message
     global ack_state
-    print("clear_msg()")
+    # print("clear_msg()")
     new_message = False
     leds_off()
     ack_state = False
@@ -53,7 +53,7 @@ def clear_msg():
 def btn_a(pushed):
     global ack_state
     global mqttclient
-    print("btn_a({}) ack_state: {}".format(pushed, ack_state))
+    # print("btn_a({}) ack_state: {}".format(pushed, ack_state))
     if not pushed:
         return
 
@@ -62,30 +62,30 @@ def btn_a(pushed):
         ack_state = True
     elif ack_state:
         clear_msg()
-        print("SEND ACK!")
+        # print("SEND ACK!")
         mqttclient.publish(MQTT_PATH, b"ack")
 
 def btn_b(pushed):
-    print("btn_b({})".format(pushed))
+    # print("btn_b({})".format(pushed))
     global ack_state
     if not pushed or not ack_state:
         return
 
     clear_msg()
-    print("SEND NACK!")
+    # print("SEND NACK!")
     mqttclient.publish(MQTT_PATH, b"nack")
 
 def btn_start(pushed):
-    print("btn_b({})".format(pushed))
+    # print("btn_b({})".format(pushed))
     global ack_state
     if not pushed or not ack_state:
         return
 
-    print("DISCARD!")
+    # print("DISCARD!")
     clear_msg()
 
 def redraw():
-    #print("redraw()")
+    # print("redraw()")
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
     sleep(0.2)
@@ -99,14 +99,14 @@ def redraw():
 def sub_cb(topic, msg):
     global new_message
     text = msg.decode('utf-8')
-    print("New message: {} > {}".format(topic.decode('utf-8'), text))
+    # print("New message: {} > {}".format(topic.decode('utf-8'), text))
     redraw()
     ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
 
     new_message = True
 
-    print("display: {}, {}: {}".format(0, 45, text))
+    # print("display: {}, {}: {}".format(0, 45, text))
     ugfx.string(10, 40, "{} {}".format(easyrtc.string(), text), "Roboto_Regular12", ugfx.BLACK)
     ugfx.string(0, 60, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
@@ -115,7 +115,7 @@ def sub_cb(topic, msg):
 def main():
     global new_message
     global mqttclient
-    print("Running...")
+    # print("Running...")
 
 
     redraw()
@@ -125,7 +125,7 @@ def main():
     i = 0
     while True:
         mqttclient.check_msg()
-        print("post check_msg(): {}".format(new_message))
+        # print("post check_msg(): {}".format(new_message))
         if new_message:
             while new_message:
                 running_leds(i)
@@ -141,24 +141,24 @@ def main():
     mqttclient.disconnect()
 
 def btn_select(pushed):
-    #print("go_home({})".format(pushed))
+    # print("go_home({})".format(pushed))
     if pushed:
         import machine
         machine.deepsleep(1)
 
-print("START")
+# print("START")
 
-print("ugfx init")
+# print("ugfx init")
 ugfx.init()
 #ugfx.LUT_FULL
 ugfx.input_init()
 
-print("badge init")
+# print("badge init")
 badge.leds_init()
 badge.leds_enable()
 
 # Make sure WiFi is connected
-print("wifi init")
+# print("wifi init")
 wifi.init()
 
 ugfx.clear(ugfx.WHITE)
@@ -167,14 +167,14 @@ ugfx.flush()
 
 # Wait for WiFi connection
 while not wifi.sta_if.isconnected():
-    print("Not connected, waiting...")
+    # print("Not connected, waiting...")
     sleep(0.2)
 
 ugfx.clear(ugfx.WHITE)
 ugfx.string(10, 10, "Connecting to MQTT {}...".format(MAC), "Roboto_Regular12", 0)
 ugfx.flush()
 
-print("mqtt connect...")
+# print("mqtt connect...")
 mqttclient = MQTTClient(CLIENTNAME, "test.mosquitto.org")
 mqttclient.set_callback(sub_cb)
 mqttclient.connect()
