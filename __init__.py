@@ -16,7 +16,7 @@ import easyrtc
 
 print("START")
 
-VERSION = 0.2
+VERSION = 0.3
 MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
 CLIENTNAME = "SHAPAGER.{}".format(MAC)
 MQTT_PATH = "sha2017pager/swe/{}".format(MAC)
@@ -49,13 +49,13 @@ def clear_msg():
     global ack_state
     print("clear_msg()")
     new_message = False
-    leds_off()
     ack_state = False
     clear_screen()
 
 def btn_a(pushed):
     global ack_state
     global mqttclient
+    global curr_id
     print("btn_a({}) ack_state: {}".format(pushed, ack_state))
     if not pushed:
         return
@@ -64,27 +64,35 @@ def btn_a(pushed):
         display_acknack()
         ack_state = True
     elif ack_state:
+        leds_off()
         clear_msg()
         print("SEND ACK!")
-        mqttclient.publish(MQTT_REPLY_PATH, b"ack")
+        mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"ack\"}".format(curr_id))
+        curr_id = ""
 
 def btn_b(pushed):
     print("btn_b({})".format(pushed))
     global ack_state
+    global curr_id
     if not pushed or not ack_state:
         return
 
+    leds_off()
     clear_msg()
     print("SEND NACK!")
-    mqttclient.publish(MQTT_REPLY_PATH, b"nack")
+    mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"nack\"}".format(curr_id))
+    curr_id = ""
 
 def btn_start(pushed):
     print("btn_b({})".format(pushed))
     global ack_state
+    global curr_id
     if not pushed or not ack_state:
         return
 
     print("DISCARD!")
+    curr_id = ""
+    leds_off()
     clear_msg()
 
 def clear_screen():
@@ -100,19 +108,34 @@ def clear_screen():
 
 def print_std_msg():
     clear_screen()
-    ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic24", ugfx.BLACK)
-    ugfx.string(0, 115, "(SELECT) to quit", "Roboto_BlackItalic16", ugfx.BLACK)
+    ugfx.string(0, 0, "Badgepager v.{}".format(VERSION, MAC), "Roboto_BlackItalic24", ugfx.BLACK)
+    ugfx.flush()
+    ugfx.string(0, 115, "(SELECT) to quit, my id: {}".format(MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
 
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
+    global curr_id
+
     data = {}
     try:
         data = json.loads(msg.decode('utf-8'))
     except Exception:
         print("Invalid message: {}".format(msg.decode('utf-8')))
         return
+
+    if data["text"] is None:
+        print("Missing field TEXT: {}".format(msg.decode('utf-8')))
+        return
+    elif data["sender"] is None:
+        print("Missing field SENDER: {}".format(msg.decode('utf-8')))
+        return
+    elif data["id"] is None:
+        print("Missing field ID: {}".format(msg.decode('utf-8')))
+        return
+
+    curr_id = data["id"]
 
     print("New message: {} > {}".format(topic.decode('utf-8'), data["text"]))
     print_std_msg()
@@ -121,7 +144,7 @@ def sub_cb(topic, msg):
 
     print("display: {}, {}: {}".format(0, 45, data.get("text", "")))
     ugfx.string(10, 40, "{} <{}> {}".format(easyrtc.string(), data["sender"], data["text"]), "Roboto_Regular12", ugfx.BLACK)
-    ugfx.string(0, 60, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
+    ugfx.string(0, 80, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
 
 
@@ -199,6 +222,7 @@ LED_DATA = bytes([
 ])
 
 ack_state = False
+curr_id = ""
 
 """
         ugfx.input_attach(ugfx.JOY_UP,lambda pressed: self.btn_up(pressed))
