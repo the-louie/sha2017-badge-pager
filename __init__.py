@@ -73,6 +73,7 @@ def clear_msg():
     message_queue = []
     leds_off()
     ack_state = False
+    redraw()
 
 def btn_a(pushed):
     print("btn_a({})".format(pushed))
