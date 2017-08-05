@@ -100,8 +100,8 @@ def clear_screen():
 
 def print_std_msg():
     clear_screen()
-    ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
-    ugfx.string(0, 130, "(SELECT) to quit", "Roboto_BlackItalic16", ugfx.BLACK)
+    ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic24", ugfx.BLACK)
+    ugfx.string(0, 115, "(SELECT) to quit", "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
 
 # Received messages from subscriptions will be delivered to this callback
