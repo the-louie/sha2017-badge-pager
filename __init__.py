@@ -4,6 +4,7 @@ from umqtt.simple import MQTTClient
 import ubinascii
 import network
 import easyrtc
+import sys
 
 VERSION = 0.2
 MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
@@ -28,7 +29,7 @@ while not wifi.sta_if.isconnected():
     sleep(0.2)
 
 ugfx.clear(ugfx.WHITE);
-ugfx.string(10,10,"Connecting to MQTT...","Roboto_Regular12", 0)
+ugfx.string(10,10,"Connecting to MQTT {}...".format(MAC),"Roboto_Regular12", 0)
 ugfx.flush()
 
 new_message = False
@@ -123,8 +124,9 @@ def main(server="test.mosquitto.org"):
 def go_home(pushed):
     #print("go_home({})".format(pushed))
     if pushed:
-        import machine
-        machine.deepsleep(1)
+        sys.exit(0)
+        # import machine
+        # machine.deepsleep(1)
 
 ugfx.input_attach(ugfx.BTN_B, go_home)
 ugfx.input_attach(ugfx.BTN_A, messages_acc)
