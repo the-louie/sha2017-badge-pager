@@ -35,9 +35,10 @@ def leds_off():
     print("leds_off()")
     badge.leds_send_data(bytes([0]*24), 24)
 
-def display_acknack(data):
+def display_acknack():
+    global curr_data
     print("display_acknack()")
-    print_message(data)
+    print_message(curr_data)
 
     ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
 #    ugfx.flush()
@@ -83,7 +84,7 @@ def btn_b(pushed):
     clear_msg()
     print("SEND NACK!")
     mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"nack\"}".format(curr_data["id"]))
-    curr_data = {}
+    curr_data = {}
 
 def btn_start(pushed):
     print("btn_b({})".format(pushed))
