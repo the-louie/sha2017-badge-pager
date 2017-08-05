@@ -5,6 +5,7 @@ import gc
 import json
 from time import sleep as sleep
 
+import esp
 import ugfx
 import wifi
 import badge
@@ -187,8 +188,9 @@ def main():
 
             print_std_msg()
 
-
-        sleep(5)
+        print("start sleeping...")
+        esp.start_sleeping(5000)
+        print("end sleeping!")
 
     mqttclient.disconnect()
 
