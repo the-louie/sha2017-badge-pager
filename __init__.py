@@ -2,7 +2,9 @@
     recieve pages via mqtt
 """
 import gc
-from time import *
+import json
+from time import sleep as sleep
+
 import ugfx
 import wifi
 import badge
@@ -18,6 +20,7 @@ VERSION = 0.2
 MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
 CLIENTNAME = "SHAPAGER.{}".format(MAC)
 MQTT_PATH = "sha2017pager/swe/{}".format(MAC)
+MQTT_REPLY_PATH = "sha2017pager/swe/replies"
 
 
 def rotate(arr, length):
@@ -63,7 +66,7 @@ def btn_a(pushed):
     elif ack_state:
         clear_msg()
         print("SEND ACK!")
-        mqttclient.publish(MQTT_PATH, b"ack")
+        mqttclient.publish(MQTT_REPLY_PATH, b"ack")
 
 def btn_b(pushed):
     print("btn_b({})".format(pushed))
@@ -73,7 +76,7 @@ def btn_b(pushed):
 
     clear_msg()
     print("SEND NACK!")
-    mqttclient.publish(MQTT_PATH, b"nack")
+    mqttclient.publish(MQTT_REPLY_PATH, b"nack")
 
 def btn_start(pushed):
     print("btn_b({})".format(pushed))
@@ -95,19 +98,29 @@ def redraw():
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
 
+def print_std_msg()
+    redraw()
+    ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
+    ugfx.string(0, 130, "(SELECT) to quit", "Roboto_BlackItalic16", ugfx.BLACK)
+    ugfx.flush()
+
 # Received messages from subscriptions will be delivered to this callback
 def sub_cb(topic, msg):
     global new_message
-    text = msg.decode('utf-8')
-    print("New message: {} > {}".format(topic.decode('utf-8'), text))
-    redraw()
-    ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
-    ugfx.flush()
+    text = ""
+    try:
+        data = json.loads(msg.decode('utf-8'))
+    except Exception:
+        print("Invalid message: {}".format(msg.decode('utf-8')))
+        return
+
+    print("New message: {} > {}".format(topic.decode('utf-8'), data["text"]))
+    print_std_msg()
 
     new_message = True
 
     print("display: {}, {}: {}".format(0, 45, text))
-    ugfx.string(10, 40, "{} {}".format(easyrtc.string(), text), "Roboto_Regular12", ugfx.BLACK)
+    ugfx.string(10, 40, "{} <{}> {}".format(easyrtc.string(), data["sender"], data["text"]), "Roboto_Regular12", ugfx.BLACK)
     ugfx.string(0, 60, "PRESS (A) to contiue", "Roboto_Regular12", ugfx.BLACK)
     ugfx.flush()
 
@@ -118,9 +131,7 @@ def main():
     print("Running...")
 
 
-    redraw()
-    ugfx.string(10, 10, "Badgepager ({})".format(MAC), "Roboto_Regular12", 0)
-    ugfx.flush()
+    print_std_msg()
 
     i = 0
     while True:
@@ -131,9 +142,7 @@ def main():
                 running_leds(i)
                 i += 1
                 sleep(0.1)
-            redraw()
-            ugfx.string(10,10,"Badgepager ({})".format(MAC),"Roboto_Regular12", 0)
-            ugfx.flush()
+            print_std_msg()
 
 
         sleep(5)
