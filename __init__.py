@@ -70,7 +70,8 @@ def btn_a(pushed):
         leds_off()
         clear_msg()
         print("SEND ACK!")
-        mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"ack\"}".format(curr_data["id"]))
+        response = { "id": curr_data["id"], "text": "ack" }
+        mqttclient.publish(MQTT_REPLY_PATH, json.dumps(response))
         curr_data = {}
 
 def btn_b(pushed):
@@ -83,7 +84,8 @@ def btn_b(pushed):
     leds_off()
     clear_msg()
     print("SEND NACK!")
-    mqttclient.publish(MQTT_REPLY_PATH, b"{\"id\": {}, \"text\": \"nack\"}".format(curr_data["id"]))
+    response = { "id": curr_data["id"], "text": "nack" }
+    mqttclient.publish(MQTT_REPLY_PATH, json.dumps(response))
     curr_data = {}
 
 def btn_start(pushed):
