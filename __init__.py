@@ -146,19 +146,19 @@ def btn_select(pushed):
         import machine
         machine.deepsleep(1)
 
-print "START"
+print("START")
 
-print "ugfx init"
+print("ugfx init")
 ugfx.init()
 #ugfx.LUT_FULL
 ugfx.input_init()
 
-print "badge init"
+print("badge init")
 badge.leds_init()
 badge.leds_enable()
 
 # Make sure WiFi is connected
-print "wifi init"
+print("wifi init")
 wifi.init()
 
 ugfx.clear(ugfx.WHITE)
@@ -174,7 +174,7 @@ ugfx.clear(ugfx.WHITE)
 ugfx.string(10, 10, "Connecting to MQTT {}...".format(MAC), "Roboto_Regular12", 0)
 ugfx.flush()
 
-print "mqtt connect..."
+print("mqtt connect...")
 mqttclient = MQTTClient(CLIENTNAME, "test.mosquitto.org")
 mqttclient.set_callback(sub_cb)
 mqttclient.connect()
