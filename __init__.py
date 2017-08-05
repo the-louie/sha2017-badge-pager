@@ -98,7 +98,7 @@ def redraw():
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
 
-def print_std_msg()
+def print_std_msg():
     redraw()
     ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.string(0, 130, "(SELECT) to quit", "Roboto_BlackItalic16", ugfx.BLACK)
