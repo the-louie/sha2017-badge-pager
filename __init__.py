@@ -37,9 +37,9 @@ ugfx.flush()
 new_message = False
 led_data = bytes([
     8, 0, 0, 0,
+    0, 8, 0, 0,
     0, 0, 0, 0,
     0, 0, 8, 0,
-    0, 0, 0, 0,
     8, 8, 0, 0,
     0, 0, 0, 0,
 ])
@@ -96,11 +96,11 @@ def sub_cb(topic, msg):
     new_message = True
     message_queue.append("<{}> {}".format(easyrtc.string(), text))
 
-    for i in range(0, len(message_queue)):
+    for i in range(0, min(9, len(message_queue))):
         print("display: {}, {}: {}".format(0, 35+(10*i), message_queue[i]))
         ugfx.string(0, 35 + (10*i), message_queue[i], "Roboto_Regular12", ugfx.BLACK)
+        ugfx.flush()
 
-    ugfx.flush()
 
 def main(server="test.mosquitto.org"):
     global new_message
@@ -120,7 +120,7 @@ def main(server="test.mosquitto.org"):
     i = 0
     while True:
         mqttclient.check_msg()
-        #print("checked: {}".format(new_message))
+        print("checked: {}".format(new_message))
         if new_message:
             running_leds(i)
             i += 1
