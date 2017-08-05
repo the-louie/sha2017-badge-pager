@@ -2,7 +2,7 @@
     recieve pages via mqtt
 """
 import gc
-from time import sleep
+from time import *
 import ugfx
 import wifi
 import badge
