@@ -81,6 +81,7 @@ def btn_a(pushed):
         return
 
     if not ack_state: # display options to ack || nack
+        display_acknack()
         ack_state = True
     elif ack_state:
         clear_msg()
