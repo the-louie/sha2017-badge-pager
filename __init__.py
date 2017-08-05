@@ -45,6 +45,7 @@ led_data = bytes([
 ])
 
 message_queue = []
+ack_state = False
 
 def rotate(l, n):
     return l[n:] + l[:n]
@@ -59,14 +60,49 @@ def leds_off():
     #print("leds_off()")
     badge.leds_send_data(bytes([0]*24), 24)
 
-def messages_acc(pushed):
-    #print("messages_acc({})".format(pushed))
+def display_acknack():
+    ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
+    ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
+    ugfx.string(10, 90, "(START) discard", "Roboto_Regular12", ugfx.BLACK)
+
+def clear_msg():
     global new_message
     global message_queue
-    if pushed:
-        new_message = False
-        message_queue = []
-        leds_off()
+    new_message = False
+    message_queue = []
+    leds_off()
+
+def btn_a(pushed):
+    print("btn_a({})".format(pushed))
+    global ack_state
+    if not pushed:
+        return
+
+    if not ack_state: # display options to ack || nack
+        ack_state = True
+    elif ack_state:
+        clear_msg()
+        print("SEND ACK!")
+        # TODO: send ACK!
+
+def btn_b(pushed):
+    print("btn_b({})".format(pushed))
+    global ack_state
+    if not pushed or not ack_state:
+        return
+
+    clear_msg()
+    print("SEND NACK!")
+    # TODO: SEND NACK!
+
+def btn_start(pushed):
+    print("btn_b({})".format(pushed))
+    global ack_state
+    if not pushed or not ack_state:
+        return
+
+    print("DISCARD!")
+    clear_msg()
 
 def redraw():
     #print("redraw()")
@@ -130,14 +166,27 @@ def main(server="test.mosquitto.org"):
 
     mqttclient.disconnect()
 
-def go_home(pushed):
+def btn_select(pushed):
     #print("go_home({})".format(pushed))
     if pushed:
         import machine
         machine.deepsleep(1)
 
-ugfx.input_attach(ugfx.BTN_B, go_home)
-ugfx.input_attach(ugfx.BTN_A, messages_acc)
+"""
+        ugfx.input_attach(ugfx.JOY_UP,lambda pressed: self.btn_up(pressed))
+        ugfx.input_attach(ugfx.JOY_DOWN,lambda pressed: self.btn_down(pressed))
+        ugfx.input_attach(ugfx.JOY_LEFT,lambda pressed: self.btn_left(pressed))
+        ugfx.input_attach(ugfx.JOY_RIGHT,lambda pressed: self.btn_right(pressed))
+        ugfx.input_attach(ugfx.BTN_SELECT,lambda pressed: self.btn_select(pressed))
+        ugfx.input_attach(ugfx.BTN_START,lambda pressed: self.btn_start(pressed))
+        ugfx.input_attach(ugfx.BTN_A,lambda pressed: self.btn_a(pressed))
+        ugfx.input_attach(ugfx.BTN_B,lambda pressed: self.btn_b(pressed))
+"""
+
+ugfx.input_attach(ugfx.BTN_SELECT, btn_select)
+ugfx.input_attach(ugfx.BTN_A, btn_a)
+ugfx.input_attach(ugfx.BTN_B, btn_b)
+ugfx.input_attach(ugfx.BTN_START, btn_start)
 
 #print("test")
 main()
