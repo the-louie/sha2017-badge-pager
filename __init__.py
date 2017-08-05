@@ -11,7 +11,6 @@ from umqtt.simple import MQTTClient
 import ubinascii
 import network
 import easyrtc
-import sys
 
 print("START")
 
@@ -20,41 +19,9 @@ MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
 CLIENTNAME = "SHAPAGER.{}".format(MAC)
 MQTT_PATH = "sha2017pager/swe/{}".format(MAC)
 
-ugfx.init()
-#ugfx.LUT_FULL
-ugfx.input_init()
-badge.leds_init()
-badge.leds_enable()
 
-# Make sure WiFi is connected
-wifi.init()
-
-ugfx.clear(ugfx.WHITE)
-ugfx.string(10, 10, "Waiting for wifi...", "Roboto_Regular12", 0)
-ugfx.flush()
-
-# Wait for WiFi connection
-while not wifi.sta_if.isconnected():
-    sleep(0.2)
-
-ugfx.clear(ugfx.WHITE)
-ugfx.string(10, 10, "Connecting to MQTT {}...".format(MAC), "Roboto_Regular12", 0)
-ugfx.flush()
-
-new_message = False
-LED_DATA = bytes([
-    8, 0, 0, 0,
-    0, 8, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 8, 0,
-    8, 8, 0, 0,
-    0, 0, 0, 0,
-])
-
-ack_state = False
-
-def rotate(l, n):
-    return l[n:] + l[:n]
+def rotate(arr, length):
+    return arr[length:] + arr[:length]
 
 def running_leds(i):
     #print("running_leds({})".format(i))
@@ -85,6 +52,7 @@ def clear_msg():
 
 def btn_a(pushed):
     global ack_state
+    global mqttclient
     print("btn_a({}) ack_state: {}".format(pushed, ack_state))
     if not pushed:
         return
@@ -95,7 +63,7 @@ def btn_a(pushed):
     elif ack_state:
         clear_msg()
         print("SEND ACK!")
-        # TODO: send ACK!
+        mqttclient.publish(MQTT_PATH, b"ack")
 
 def btn_b(pushed):
     print("btn_b({})".format(pushed))
@@ -105,7 +73,7 @@ def btn_b(pushed):
 
     clear_msg()
     print("SEND NACK!")
-    # TODO: SEND NACK!
+    mqttclient.publish(MQTT_PATH, b"nack")
 
 def btn_start(pushed):
     print("btn_b({})".format(pushed))
@@ -133,12 +101,8 @@ def sub_cb(topic, msg):
     text = msg.decode('utf-8')
     print("New message: {} > {}".format(topic.decode('utf-8'), text))
     redraw()
-    ugfx.string(0,0,"Badgepager v.{} ({})".format(VERSION, MAC),"Roboto_BlackItalic16",ugfx.BLACK)
+    ugfx.string(0, 0, "Badgepager v.{} ({})".format(VERSION, MAC), "Roboto_BlackItalic16", ugfx.BLACK)
     ugfx.flush()
-
-    if text.lower() == "reset":
-        messages_acc(True)
-        return
 
     new_message = True
 
@@ -148,14 +112,11 @@ def sub_cb(topic, msg):
     ugfx.flush()
 
 
-def main(server="test.mosquitto.org"):
+def main():
     global new_message
+    global mqttclient
     print("Running...")
 
-    mqttclient = MQTTClient(CLIENTNAME, server)
-    mqttclient.set_callback(sub_cb)
-    mqttclient.connect()
-    mqttclient.subscribe(MQTT_PATH)
 
     redraw()
     ugfx.string(10, 10, "Badgepager ({})".format(MAC), "Roboto_Regular12", 0)
@@ -184,6 +145,53 @@ def btn_select(pushed):
     if pushed:
         import machine
         machine.deepsleep(1)
+
+print "START"
+
+print "ugfx init"
+ugfx.init()
+#ugfx.LUT_FULL
+ugfx.input_init()
+
+print "badge init"
+badge.leds_init()
+badge.leds_enable()
+
+# Make sure WiFi is connected
+print "wifi init"
+wifi.init()
+
+ugfx.clear(ugfx.WHITE)
+ugfx.string(10, 10, "Waiting for wifi...", "Roboto_Regular12", 0)
+ugfx.flush()
+
+# Wait for WiFi connection
+while not wifi.sta_if.isconnected():
+    print("Not connected, waiting...")
+    sleep(0.2)
+
+ugfx.clear(ugfx.WHITE)
+ugfx.string(10, 10, "Connecting to MQTT {}...".format(MAC), "Roboto_Regular12", 0)
+ugfx.flush()
+
+print "mqtt connect..."
+mqttclient = MQTTClient(CLIENTNAME, "test.mosquitto.org")
+mqttclient.set_callback(sub_cb)
+mqttclient.connect()
+mqttclient.subscribe(MQTT_PATH)
+
+
+new_message = False
+LED_DATA = bytes([
+    8, 0, 0, 0,
+    0, 8, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 8, 0,
+    8, 8, 0, 0,
+    0, 0, 0, 0,
+])
+
+ack_state = False
 
 """
         ugfx.input_attach(ugfx.JOY_UP,lambda pressed: self.btn_up(pressed))
