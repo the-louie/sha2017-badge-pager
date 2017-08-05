@@ -64,6 +64,7 @@ def display_acknack():
     ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
     ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
     ugfx.string(10, 90, "(START) discard", "Roboto_Regular12", ugfx.BLACK)
+    ugfx.flush()
 
 def clear_msg():
     global new_message
@@ -71,6 +72,7 @@ def clear_msg():
     new_message = False
     message_queue = []
     leds_off()
+    ack_state = False
 
 def btn_a(pushed):
     print("btn_a({})".format(pushed))
