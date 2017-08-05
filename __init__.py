@@ -4,7 +4,6 @@
 import gc
 import json
 from time import sleep as sleep
-import copy
 
 import ugfx
 import wifi
@@ -149,7 +148,7 @@ def sub_cb(topic, msg):
         print("Missing field ID: {}".format(msg.decode('utf-8')))
         return
 
-    curr_data = copy.copy(data)
+    curr_data = data.copy()
 
     print("New message: {} > {}".format(topic.decode('utf-8'), data["text"]))
 
