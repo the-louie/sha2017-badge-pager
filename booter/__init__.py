@@ -18,6 +18,11 @@ f = io.open('/lib/louie-test/__init__.py', 'w')
 f.write(r.text)
 f.close()
 
+##########
+
+import appglue
+appglue.start_app("louie-test")
+
 
 ######
 

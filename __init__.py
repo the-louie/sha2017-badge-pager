@@ -1,11 +1,17 @@
-import ugfx, gc, wifi, badge, deepsleep, urandom
 from time import *
+import ugfx, gc, wifi, badge, deepsleep, urandom
 from umqtt.simple import MQTTClient
+import ubinascii
+import network
+import easyrtc
 
-VERSION = 0.1
+VERSION = 0.2
+MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
+CLIENTNAME = "SHAPAGER.{}".format(MAC)
+MQTT_PATH = "sha2017pager/swe/{}".format(MAC)
 
 ugfx.init()
-ugfx.LUT_FULL
+#ugfx.LUT_FULL
 ugfx.input_init()
 badge.leds_init()
 badge.leds_enable()
@@ -41,26 +47,30 @@ def rotate(l, n):
     return l[n:] + l[:n]
 
 def running_leds(i):
+    print "running_leds({})".format(i)
     global led_data
     badge.leds_send_data(led_data, 24)
     led_data = rotate(led_data, (i*4) % 24)
 
 def leds_off():
+    print "leds_off()"
     badge.leds_send_data([0]*24, 24)
 
 def messages_acc(pushed):
+    print "messages_acc({})".format(pushed)
     if pushed:
         new_message = False
         message_queue = []
         leds_off()
 
 def redraw():
+    print "redraw()"
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
-    sleep(0.1)
+    sleep(0.2)
     ugfx.clear(ugfx.BLACK)
     ugfx.flush()
-    sleep(0.1)
+    sleep(0.2)
     ugfx.clear(ugfx.WHITE)
     ugfx.flush()
 
@@ -68,46 +78,50 @@ def redraw():
 def sub_cb(topic, msg):
     global new_message
     text = msg.decode('utf-8')
-
+    print("New message: {} > {}".format(topic.decode('utf-8'), text))
     redraw()
-    ugfx.string(0,0,"Badgepager v.{}".format(VERSION),"Roboto_BlackItalic24",ugfx.BLACK)
+    ugfx.string(0,0,"Badgepager v.{} ({})".format(VERSION, MAC),"Roboto_BlackItalic16",ugfx.BLACK)
     ugfx.flush()
 
     if text.lower() == "reset":
-        messages_acc()
+        messages_acc(True)
         return
 
     new_message = True
+    message_queue.append("<{}> {}".format(easyrtc.string(), text))
 
     for i in range(0, len(message_queue)-1):
-        ugfx.string(0,25 + (10*i), text, "Roboto_Regular12", ugfx.BLACK)
+        ugfx.string(0,35 + (10*i), message_queue[i], "Roboto_Regular12", ugfx.BLACK)
 
     ugfx.flush()
 
 def main(server="test.mosquitto.org"):
     global new_message
+    print "Running..."
 
     clientname = 'SHA2017SWE ' + str(urandom.getrandbits(30))
-    c = MQTTClient(clientname, server)
-    c.set_callback(sub_cb)
-    c.connect()
-    c.subscribe(b"sha2017pager/swe/MA:CK:AD:DR:SS")
+    mqttclient = MQTTClient(clientname, server)
+    mqttclient.set_callback(sub_cb)
+    mqttclient.connect()
+    mqttclient.subscribe(MQTT_PATH)
 
-    c.check_msg()
+    mqttclient.check_msg()
     ugfx.string(10,10,"Badgepager online","Roboto_Regular12", 0)
     ugfx.flush()
 
     i = 0
     while True:
-        c.check_msg()
+        mqttclient.check_msg()
+        print "checked: {}".format(new_message)
         if new_message:
             running_leds(i)
             i += 1
 
         sleep(1)
-    c.disconnect()
+    mqttclient.disconnect()
 
 def go_home(pushed):
+    print "go_home({})".format(pushed)
     if pushed:
         import machine
         machine.deepsleep(1)
@@ -115,4 +129,5 @@ def go_home(pushed):
 ugfx.input_attach(ugfx.BTN_B, go_home)
 ugfx.input_attach(ugfx.BTN_A, messages_acc)
 
+print "test"
 main()
