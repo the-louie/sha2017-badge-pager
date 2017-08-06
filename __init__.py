@@ -17,12 +17,14 @@ import easyrtc
 
 print("START")
 
-VERSION = 0.3
+VERSION = 0.4
 MAC = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
 CLIENTNAME = "SHAPAGER.{}".format(MAC)
 MQTT_PATH = "sha2017pager/swe/{}".format(MAC)
 MQTT_REPLY_PATH = "sha2017pager/swe/replies"
 
+current_index = 0
+options = ugfx.List(0,0,int(ugfx.width()/2),ugfx.height())
 
 def rotate(arr, length):
     return arr[length:] + arr[:length]
@@ -42,17 +44,52 @@ def leds_off():
     print("leds_off()")
     badge.leds_send_data(bytes([0]*24), 24)
 
+def menu_replies_select_up():
+    global current_index
+    global options
+    global menu_active
+    if not menu_active:
+        return
+    new_selection = current_index -1
+    if new_selection >= 0:
+        options.selected_index(current_index -1)
+    ugfx.flush()
+
+def menu_replies_select_down():
+    global current_index
+    global options
+    global menu_active
+    if not menu_active:
+        return
+    new_selection = current_index + 1
+    if new_selection < options.count():
+        options.selected_index(current_index + 1)
+    ugfx.flush()
+
 def display_acknack():
     global curr_data
+    global options
+    global menu_active
+    menu_active = True
     print("display_acknack()")
-    print_message(curr_data)
 
-    ugfx.string(10, 70, "(A) ack", "Roboto_Regular12", ugfx.BLACK)
-#    ugfx.flush()
-    ugfx.string(10, 80, "(B) nack", "Roboto_Regular12", ugfx.BLACK)
-#    ugfx.flush()
-    ugfx.string(10, 90, "(START) discard", "Roboto_Regular12", ugfx.BLACK)
-    ugfx.flush()
+    ugfx.string(152, 25, "[Up/Down] to chose","Roboto_BlackItalic12", ugfx.BLACK)
+    ugfx.string(152, 50, "[A] to send","Roboto_BlackItalic12", ugfx.BLACK)
+    ugfx.string(152, 70, "[SELECT] to discard","Roboto_BlackItalic12", ugfx.BLACK)
+
+
+    options.add_item("Ack")
+    options.add_item("Nack")
+    options.add_item("Derp")
+    options.add_item("Meh")
+    options.add_item("lol")
+
+
+    options.selected_index(0)
+
+    ugfx.input_attach(ugfx.JOY_UP, menu_replies_select_up)
+    ugfx.input_attach(ugfx.JOY_DOWN, menu_replies_select_down)
+    #ugfx.input_attach(ugfx.BTN_SELECT, menu_dicscard)
 
 def clear_msg():
     global new_message
@@ -172,7 +209,6 @@ def main():
     global mqttclient
     print("Running...")
 
-
     print_std_msg()
 
     i = 0
@@ -197,6 +233,8 @@ def btn_select(pushed):
     if pushed:
         import machine
         machine.deepsleep(1)
+
+
 
 print("ugfx init")
 ugfx.init()
